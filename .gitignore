@@ -1,3 +1,9 @@
 eggs/
 develop-eggs
 bin/
+.installed.cfg
+.mr.developer.cfg
+src/plone.jsonapi.core
+src/plone.jsonapi.routes
+parts
+var
