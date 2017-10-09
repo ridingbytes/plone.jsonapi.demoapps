@@ -6,16 +6,51 @@
       i18n:domain="plone">
   <body>
 
+    <!-- JavaScripts -->
     <metal:block fill-slot="javascript_head_slot">
-      <!-- Scripts -->
       <script type="text/javascript" src="++resource++static/js/todo.js"></script>
     </metal:block>
-
-    <metal:title fill-slot="content-title">
-    </metal:title>
-
+    <!-- CSS -->
+    <metal:block fill-slot="style_slot">
+      <link rel="stylesheet" type="text/css" href="++resource++static/css/font-awesome.min.css"/>
+      <link rel="stylesheet" type="text/css" href="++resource++static/css/todo.css"/>
+    </metal:block>
+      <h1 class="documentFirstHeading">Todos</h1>
     <metal:content fill-slot="content-core">
-      <div id="todo"></div>
+      <div id="todoapp">
+        <header>
+          <input id="new-todo" type="text" class="form-control" placeholder="What needs to be done?">
+        </header>
+        <section id="main">
+          <!-- <input id="toggle-all" type="checkbox"> -->
+          <!-- <label for="toggle-all">Mark all as complete</label> -->
+          <ul id="todo-list"></ul>
+        </section>
+        <footer>
+          <div class="todo-count"><strong><%- count %></strong> item left</div>
+        </footer>
+      </div>
+
+      <!-- Templates -->
+      <script type="text/template" id="todo-item">
+        <div class="view">
+          <label class="state-<%- review_state %>"><%- title %></label>
+          <a class="destroy">
+            <i class="fa fa-times" aria-hidden="true"></i>
+          </a>
+          <% if (review_state == "private") { %>
+            <a class="toggleState">
+              <i class="fa fa-check-square-o" aria-hidden="true"></i>
+            </a>
+          <% } else { %>
+            <a class="toggleState">
+              <i class="fa fa-square-o" aria-hidden="true"></i>
+            </a>
+          <% } %>
+        </div>
+        <input class="edit" type="text" value="<%- title %>">
+      </script>
+
     </metal:content>
 
   </body>

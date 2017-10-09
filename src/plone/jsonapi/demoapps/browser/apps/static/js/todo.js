@@ -8,12 +8,13 @@
     hasProp = {}.hasOwnProperty;
 
   require(['++resource++static/js/jquery-1.12.4.min.js', '++resource++static/js/backbone-min.js', '++resource++static/js/underscore-min.js'], function() {
-    var Todo, Todos;
+    var App, Todo, TodoView, Todos;
     console.log("jQuery Version=", jQuery.fn.jquery);
     console.log("Backbone=", Backbone.VERSION);
     console.log("Underscore=", _.VERSION);
 
     /* MODELS */
+    Backbone.emulateHTTP = true;
     Todo = (function(superClass) {
       extend(Todo, superClass);
 
@@ -21,11 +22,41 @@
         return Todo.__super__.constructor.apply(this, arguments);
       }
 
+      Todo.prototype.urlRoot = '@@API/plone/api/1.0/document';
+
+      Todo.prototype.idAttribute = 'uid';
+
       Todo.prototype.defaults = {
-        id: "",
-        title: "",
-        url: "",
-        state: ""
+        uid: "",
+        parent_path: "/Plone/todos",
+        review_state: "private"
+      };
+
+      Todo.prototype.isNew = function() {
+        return _.isEmpty(this.get("uid"));
+      };
+
+      Todo.prototype.isDone = function() {
+        if (this.get("review_state") === "private") {
+          return true;
+        } else {
+          return false;
+        }
+      };
+
+      Todo.prototype.toggleState = function() {
+        var transition;
+        transition = this.get("review_state") === "published" ? "retract" : "publish";
+        return this.save({
+          transition: transition
+        }, {
+          success: function(model, response, options) {
+            if ((response != null ? response.items.length : void 0) !== 1) {
+              return;
+            }
+            return model.set(response.items[0]);
+          }
+        });
       };
 
       return Todo;
@@ -33,7 +64,7 @@
     })(Backbone.Model);
 
     /* COLLECTIONS */
-    return Todos = (function(superClass) {
+    Todos = (function(superClass) {
       extend(Todos, superClass);
 
       function Todos() {
@@ -42,9 +73,151 @@
 
       Todos.prototype.model = Todo;
 
+      Todos.prototype.url = '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=getObjPositionInParent';
+
+      Todos.prototype.parse = function(data) {
+        return data.items;
+      };
+
       return Todos;
 
     })(Backbone.Collection);
+
+    /* VIEWS */
+    TodoView = (function(superClass) {
+      extend(TodoView, superClass);
+
+      function TodoView() {
+        return TodoView.__super__.constructor.apply(this, arguments);
+      }
+
+      TodoView.prototype.tagName = "li";
+
+      TodoView.prototype.template = _.template($("#todo-item").html());
+
+      TodoView.prototype.initialize = function() {
+        this.listenTo(this.model, "change", this.render);
+        return this.listenTo(this.model, "destroy", this.remove);
+      };
+
+      TodoView.prototype.events = {
+        "click .destroy": "clear",
+        "click .toggleState": "toggleState",
+        "dblclick .view": "edit",
+        "keypress .edit": "updateOnEnter",
+        "blur .edit": "close"
+      };
+
+      TodoView.prototype.clear = function() {
+        return this.model.destroy();
+      };
+
+      TodoView.prototype.edit = function() {
+        this.$el.addClass("editing");
+        return this.input.focus();
+      };
+
+      TodoView.prototype.close = function() {
+        var value;
+        value = this.input.val();
+        if (!value) {
+          return this.clear();
+        } else {
+          this.model.save({
+            title: value
+          });
+          return this.$el.removeClass("editing");
+        }
+      };
+
+      TodoView.prototype.updateOnEnter = function(event) {
+        if (event.keyCode === 13) {
+          return this.close();
+        }
+      };
+
+      TodoView.prototype.toggleState = function() {
+        return this.model.toggleState();
+      };
+
+      TodoView.prototype.render = function() {
+        this.$el.html(this.template(this.model.toJSON()));
+        this.$el.toggleClass("done", this.model.isDone());
+        this.input = this.$('.edit');
+        return this;
+      };
+
+      return TodoView;
+
+    })(Backbone.View);
+    App = (function(superClass) {
+      extend(App, superClass);
+
+      function App() {
+        return App.__super__.constructor.apply(this, arguments);
+      }
+
+      App.prototype.el = "#todoapp";
+
+      App.prototype.todo_folder = "/Plone/todos";
+
+      App.prototype.events = {
+        "keypress #new-todo": "createOnEnter"
+      };
+
+      App.prototype.initialize = function() {
+        console.debug("App.initialize");
+        this.todos = new Todos();
+        this.todos.fetch({
+          path: this.todo_folder
+        });
+        this.todo_list = $("#todo-list");
+        this.todos.on('add', this.addOne, this);
+        this.todos.on('reset', this.addAll, this);
+        return this.input = $("#new-todo");
+      };
+
+      App.prototype.addOne = function(todo) {
+        var view;
+        view = new TodoView({
+          model: todo
+        });
+        return this.todo_list.append(view.render().el);
+      };
+
+      App.prototype.addAll = function() {
+        console.log("App.addAll");
+        return this.todos.each(this.addOne, this);
+      };
+
+      App.prototype.createOnEnter = function(event) {
+        var todo;
+        if (event.keyCode !== 13) {
+          return;
+        }
+        if (!this.input.val()) {
+          return;
+        }
+        todo = new Todo();
+        todo.save({
+          title: this.input.val(),
+          transition: "publish"
+        }, {
+          success: function(model, response, options) {
+            if (response.items.length !== 1) {
+              return;
+            }
+            return model.set(response.items[0]);
+          }
+        });
+        this.todos.add(todo);
+        return this.input.val("");
+      };
+
+      return App;
+
+    })(Backbone.View);
+    return window.app = new App();
   });
 
 }).call(this);

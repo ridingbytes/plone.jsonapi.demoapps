@@ -14,13 +14,131 @@ require [
 
   ### MODELS ###
 
+  Backbone.emulateHTTP = yes
+
   class Todo extends Backbone.Model
+    urlRoot: '@@API/plone/api/1.0/document'
+    idAttribute: 'uid'
+
     defaults:
-      id: ""
-      title: ""
-      url: ""
-      state: ""
+      uid: ""
+      parent_path: "/Plone/todos"
+      review_state: "private"
+
+    isNew: ->
+      _.isEmpty @get "uid"
+
+    isDone: ->
+      if @get("review_state") is "private" then yes else no
+
+    toggleState: ->
+      transition = if @get("review_state") is "published" then "retract" else "publish"
+      @save
+        transition: transition
+      ,
+        success: (model, response, options) ->
+          return unless response?.items.length is 1
+          model.set response.items[0]
+
 
   ### COLLECTIONS ###
   class Todos extends Backbone.Collection
     model: Todo
+    url: '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=getObjPositionInParent'
+
+    parse: (data) ->
+      return data.items
+
+
+  ### VIEWS ###
+  class TodoView extends Backbone.View
+    tagName: "li"
+
+    template: _.template $("#todo-item").html()
+
+    initialize: ->
+      @listenTo @model, "change", @render
+      @listenTo @model, "destroy", @remove
+
+    events:
+      "click .destroy": "clear"
+      "click .toggleState": "toggleState"
+      "dblclick .view": "edit"
+      "keypress .edit": "updateOnEnter"
+      "blur .edit": "close"
+
+    clear: ->
+      @model.destroy()
+
+    edit: ->
+      @$el.addClass("editing")
+      @input.focus()
+
+    close: ->
+      value = @input.val()
+      if (!value)
+        @clear()
+      else
+        @model.save({title: value})
+        @$el.removeClass("editing")
+
+    updateOnEnter: (event) ->
+      if (event.keyCode == 13) then @close()
+
+    toggleState: ->
+      @model.toggleState()
+
+    render: ->
+      @$el.html @template @model.toJSON()
+      @$el.toggleClass "done", @model.isDone()
+      # remember the input box
+      @input = @$('.edit')
+      return @
+
+
+  class App extends Backbone.View
+    el: "#todoapp"
+
+    todo_folder: "/Plone/todos"
+
+    events:
+      "keypress #new-todo": "createOnEnter"
+
+    initialize: ->
+      console.debug "App.initialize"
+
+      @todos = new Todos()
+      @todos.fetch path: @todo_folder
+
+      @todo_list = $("#todo-list")
+
+      @todos.on 'add', @addOne, @
+      @todos.on 'reset', @addAll, @
+
+      @input = $("#new-todo")
+
+    addOne: (todo) ->
+      view = new TodoView model:todo
+      @todo_list.append view.render().el
+
+    addAll: ->
+      console.log "App.addAll"
+      @todos.each @addOne, @
+
+    createOnEnter: (event) ->
+      return unless event.keyCode == 13
+      return unless @input.val()
+      todo = new Todo()
+      todo.save
+        title: @input.val()
+        transition: "publish"
+      ,
+        success: (model, response, options) ->
+          return unless response.items.length is 1
+          model.set response.items[0]
+        # add the todo to the collection
+      @todos.add todo
+      @input.val ""
+
+  # window.todos = new Todos()
+  window.app = new App()
