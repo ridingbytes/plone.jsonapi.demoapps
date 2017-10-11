@@ -67,34 +67,40 @@
 	text-decoration: line-through;
 }
 
-#todo-list a.destroy {
-	position: absolute;
-	right: 5px;
-	top: 20px;
-	display: none;
-	cursor: pointer;
-	width: 24px;
-	height: 24px;
-  border: none!important;
+#todo-list .details {
+    display: none
 }
-#todo-list a.toggleState {
-	  position: absolute;
-	  right: 50px;
+
+#todo-list a.destroy {
+	right: 90px;
+	top: 20px;
+}
+
+#todo-list a.info {
+	  right: 45px;
 	  top: 20px;
-	  display: none;
-	  cursor: pointer;
+}
+#todo-list textarea.description {
+    min-height: 4em;
+}
+
+#todo-list a.toggleState {
+	  right: 5px;
+	  top: 20px;
+}
+
+#todo-list .todo-action {
+	  position: absolute;
+    border: none!important;
 	  width: 24px;
 	  height: 24px;
-    border: none!important;
+	  display: none;
+	  cursor: pointer;
 }
 
-#todo-list li:hover .destroy,
-#todo-list li:hover .toggleState {
+#todo-list li:hover .todo-action {
   	display: block;
 }
-
-#todo-list .destroy:hover {
-  	background-position: 0 -20px;
 }
 
 #todo-list li.editing {
@@ -109,9 +115,8 @@
 
 #todo-list li.editing .edit {
 	display: block;
-	width: 444px;
-	padding: 13px 15px 14px 20px;
-	margin: 0;
+	width: 100%;
+	margin: 0 0 1em 0;
 }
 
 #todo-list li.editing .view {

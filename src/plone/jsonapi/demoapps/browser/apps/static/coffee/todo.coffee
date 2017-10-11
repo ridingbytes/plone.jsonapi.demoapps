@@ -22,11 +22,19 @@ require [
 
     defaults:
       uid: ""
+      url: ""
+      title: ""
+      description: ""
       parent_path: "/Plone/todos"
       review_state: "private"
 
     isNew: ->
       _.isEmpty @get "uid"
+
+    parse: (response, options) ->
+      if response.items?.length is 1
+        return response.items[0]
+      return response
 
     isDone: ->
       if @get("review_state") is "private" then yes else no
@@ -37,7 +45,7 @@ require [
         transition: transition
       ,
         success: (model, response, options) ->
-          return unless response?.items.length is 1
+          return unless response.count is 1
           model.set response.items[0]
 
 
@@ -46,8 +54,8 @@ require [
     model: Todo
     url: '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=getObjPositionInParent'
 
-    parse: (data) ->
-      return data.items
+    parse: (response, options) ->
+      return response.items
 
 
   ### VIEWS ###
@@ -65,17 +73,18 @@ require [
       "click .toggleState": "toggleState"
       "dblclick .view": "edit"
       "keypress .edit": "updateOnEnter"
+      "keypress .description": "updateDescriptionOnEnter"
       "blur .edit": "close"
 
-    clear: ->
+    clear: (event) ->
       @model.destroy()
 
     edit: ->
       @$el.addClass("editing")
-      @input.focus()
+      @title.focus()
 
     close: ->
-      value = @input.val()
+      value = @title.val()
       if (!value)
         @clear()
       else
@@ -85,14 +94,19 @@ require [
     updateOnEnter: (event) ->
       if (event.keyCode == 13) then @close()
 
-    toggleState: ->
+    updateDescriptionOnEnter: (event) ->
+      return unless (event.keyCode == 13)
+      @model.save description: @description.val()
+
+    toggleState: (event) ->
       @model.toggleState()
 
     render: ->
       @$el.html @template @model.toJSON()
       @$el.toggleClass "done", @model.isDone()
-      # remember the input box
-      @input = @$('.edit')
+      # remember the title box
+      @title = @$('.edit')
+      @description = @$('.description')
       return @
 
 
@@ -115,7 +129,7 @@ require [
       @todos.on 'add', @addOne, @
       @todos.on 'reset', @addAll, @
 
-      @input = $("#new-todo")
+      @title = $("#new-todo")
 
     addOne: (todo) ->
       view = new TodoView model:todo
@@ -127,10 +141,10 @@ require [
 
     createOnEnter: (event) ->
       return unless event.keyCode == 13
-      return unless @input.val()
+      return unless @title.val()
       todo = new Todo()
       todo.save
-        title: @input.val()
+        title: @title.val()
         transition: "publish"
       ,
         success: (model, response, options) ->
@@ -138,7 +152,7 @@ require [
           model.set response.items[0]
         # add the todo to the collection
       @todos.add todo
-      @input.val ""
+      @title.val ""
 
   # window.todos = new Todos()
   window.app = new App()

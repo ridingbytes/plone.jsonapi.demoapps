@@ -28,12 +28,23 @@
 
       Todo.prototype.defaults = {
         uid: "",
+        url: "",
+        title: "",
+        description: "",
         parent_path: "/Plone/todos",
         review_state: "private"
       };
 
       Todo.prototype.isNew = function() {
         return _.isEmpty(this.get("uid"));
+      };
+
+      Todo.prototype.parse = function(response, options) {
+        var ref;
+        if (((ref = response.items) != null ? ref.length : void 0) === 1) {
+          return response.items[0];
+        }
+        return response;
       };
 
       Todo.prototype.isDone = function() {
@@ -51,7 +62,7 @@
           transition: transition
         }, {
           success: function(model, response, options) {
-            if ((response != null ? response.items.length : void 0) !== 1) {
+            if (response.count !== 1) {
               return;
             }
             return model.set(response.items[0]);
@@ -75,8 +86,8 @@
 
       Todos.prototype.url = '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=getObjPositionInParent';
 
-      Todos.prototype.parse = function(data) {
-        return data.items;
+      Todos.prototype.parse = function(response, options) {
+        return response.items;
       };
 
       return Todos;
@@ -105,21 +116,22 @@
         "click .toggleState": "toggleState",
         "dblclick .view": "edit",
         "keypress .edit": "updateOnEnter",
+        "keypress .description": "updateDescriptionOnEnter",
         "blur .edit": "close"
       };
 
-      TodoView.prototype.clear = function() {
+      TodoView.prototype.clear = function(event) {
         return this.model.destroy();
       };
 
       TodoView.prototype.edit = function() {
         this.$el.addClass("editing");
-        return this.input.focus();
+        return this.title.focus();
       };
 
       TodoView.prototype.close = function() {
         var value;
-        value = this.input.val();
+        value = this.title.val();
         if (!value) {
           return this.clear();
         } else {
@@ -136,14 +148,24 @@
         }
       };
 
-      TodoView.prototype.toggleState = function() {
+      TodoView.prototype.updateDescriptionOnEnter = function(event) {
+        if (!(event.keyCode === 13)) {
+          return;
+        }
+        return this.model.save({
+          description: this.description.val()
+        });
+      };
+
+      TodoView.prototype.toggleState = function(event) {
         return this.model.toggleState();
       };
 
       TodoView.prototype.render = function() {
         this.$el.html(this.template(this.model.toJSON()));
         this.$el.toggleClass("done", this.model.isDone());
-        this.input = this.$('.edit');
+        this.title = this.$('.edit');
+        this.description = this.$('.description');
         return this;
       };
 
@@ -174,7 +196,7 @@
         this.todo_list = $("#todo-list");
         this.todos.on('add', this.addOne, this);
         this.todos.on('reset', this.addAll, this);
-        return this.input = $("#new-todo");
+        return this.title = $("#new-todo");
       };
 
       App.prototype.addOne = function(todo) {
@@ -195,12 +217,12 @@
         if (event.keyCode !== 13) {
           return;
         }
-        if (!this.input.val()) {
+        if (!this.title.val()) {
           return;
         }
         todo = new Todo();
         todo.save({
-          title: this.input.val(),
+          title: this.title.val(),
           transition: "publish"
         }, {
           success: function(model, response, options) {
@@ -211,7 +233,7 @@
           }
         });
         this.todos.add(todo);
-        return this.input.val("");
+        return this.title.val("");
       };
 
       return App;

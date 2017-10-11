@@ -35,20 +35,28 @@
       <script type="text/template" id="todo-item">
         <div class="view">
           <label class="state-<%- review_state %>"><%- title %></label>
-          <a class="destroy">
+          <!-- Show more -->
+          <a href="<%- url %>" target="_blank" class="todo-action info">
+            <i class="fa fa-info" aria-hidden="true"></i>
+          </a>
+          <!-- Delete Todo -->
+          <a class="todo-action destroy">
             <i class="fa fa-times" aria-hidden="true"></i>
           </a>
+          <!-- State change -->
           <% if (review_state == "private") { %>
-            <a class="toggleState">
+            <a class="todo-action toggleState">
               <i class="fa fa-check-square-o" aria-hidden="true"></i>
             </a>
           <% } else { %>
-            <a class="toggleState">
+            <a class="todo-action toggleState">
               <i class="fa fa-square-o" aria-hidden="true"></i>
             </a>
           <% } %>
         </div>
+        <!-- Edit field -->
         <input class="edit" type="text" value="<%- title %>">
+        <textarea class="description"><%- description %></textarea>
       </script>
 
     </metal:content>
