@@ -126,7 +126,7 @@
 
       TodoView.prototype.edit = function() {
         this.$el.addClass("editing");
-        return this.title.focus();
+        return this.title.select();
       };
 
       TodoView.prototype.close = function() {
@@ -196,7 +196,7 @@
         this.todo_list = $("#todo-list");
         this.todos.on('add', this.addOne, this);
         this.todos.on('reset', this.addAll, this);
-        return this.title = $("#new-todo");
+        return this.new_todo = $("#new-todo");
       };
 
       App.prototype.addOne = function(todo) {
@@ -217,12 +217,12 @@
         if (event.keyCode !== 13) {
           return;
         }
-        if (!this.title.val()) {
+        if (!this.new_todo.val()) {
           return;
         }
         todo = new Todo();
         todo.save({
-          title: this.title.val(),
+          title: this.new_todo.val(),
           transition: "publish"
         }, {
           success: function(model, response, options) {
@@ -233,7 +233,7 @@
           }
         });
         this.todos.add(todo);
-        return this.title.val("");
+        return this.new_todo.val("");
       };
 
       return App;

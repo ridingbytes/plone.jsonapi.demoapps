@@ -81,7 +81,7 @@ require [
 
     edit: ->
       @$el.addClass("editing")
-      @title.focus()
+      @title.select()
 
     close: ->
       value = @title.val()
@@ -129,7 +129,7 @@ require [
       @todos.on 'add', @addOne, @
       @todos.on 'reset', @addAll, @
 
-      @title = $("#new-todo")
+      @new_todo = $("#new-todo")
 
     addOne: (todo) ->
       view = new TodoView model:todo
@@ -141,10 +141,10 @@ require [
 
     createOnEnter: (event) ->
       return unless event.keyCode == 13
-      return unless @title.val()
+      return unless @new_todo.val()
       todo = new Todo()
       todo.save
-        title: @title.val()
+        title: @new_todo.val()
         transition: "publish"
       ,
         success: (model, response, options) ->
@@ -152,7 +152,7 @@ require [
           model.set response.items[0]
         # add the todo to the collection
       @todos.add todo
-      @title.val ""
+      @new_todo.val ""
 
   # window.todos = new Todos()
   window.app = new App()
