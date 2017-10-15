@@ -84,7 +84,7 @@
 
       Todos.prototype.model = Todo;
 
-      Todos.prototype.url = '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=getObjPositionInParent';
+      Todos.prototype.url = '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=created';
 
       Todos.prototype.parse = function(response, options) {
         return response.items;
@@ -117,6 +117,7 @@
         "dblclick .view": "edit",
         "keypress .edit": "updateOnEnter",
         "keypress .description": "updateDescriptionOnEnter",
+        "blur .description": "close",
         "blur .edit": "close"
       };
 
@@ -130,13 +131,15 @@
       };
 
       TodoView.prototype.close = function() {
-        var value;
-        value = this.title.val();
-        if (!value) {
+        var description, title;
+        title = this.title.val();
+        description = this.description.val();
+        if (!title) {
           return this.clear();
         } else {
           this.model.save({
-            title: value
+            title: title,
+            description: description
           });
           return this.$el.removeClass("editing");
         }
@@ -204,7 +207,7 @@
         view = new TodoView({
           model: todo
         });
-        return this.todo_list.append(view.render().el);
+        return this.todo_list.prepend(view.render().el);
       };
 
       App.prototype.addAll = function() {

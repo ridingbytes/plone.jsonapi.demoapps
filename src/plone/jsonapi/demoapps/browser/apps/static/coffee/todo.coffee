@@ -52,7 +52,7 @@ require [
   ### COLLECTIONS ###
   class Todos extends Backbone.Collection
     model: Todo
-    url: '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=getObjPositionInParent'
+    url: '@@API/plone/api/1.0/document?path=/Plone/todos&depth=1&sort_on=created'
 
     parse: (response, options) ->
       return response.items
@@ -74,6 +74,7 @@ require [
       "dblclick .view": "edit"
       "keypress .edit": "updateOnEnter"
       "keypress .description": "updateDescriptionOnEnter"
+      "blur .description": "close"
       "blur .edit": "close"
 
     clear: (event) ->
@@ -84,11 +85,12 @@ require [
       @title.select()
 
     close: ->
-      value = @title.val()
-      if (!value)
+      title = @title.val()
+      description = @description.val()
+      if (!title)
         @clear()
       else
-        @model.save({title: value})
+        @model.save({title: title, description: description})
         @$el.removeClass("editing")
 
     updateOnEnter: (event) ->
@@ -133,7 +135,7 @@ require [
 
     addOne: (todo) ->
       view = new TodoView model:todo
-      @todo_list.append view.render().el
+      @todo_list.prepend view.render().el
 
     addAll: ->
       console.log "App.addAll"
