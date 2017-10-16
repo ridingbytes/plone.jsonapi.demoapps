@@ -15,3 +15,6 @@ class TodoView(BrowserView):
         request.set('disable_plone.leftcolumn', 1)
         self.context = context
         self.request = request
+
+    def __call__(self):
+        return self.template()
