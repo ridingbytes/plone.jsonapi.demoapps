@@ -5,7 +5,7 @@
 
   <browser:page
       for="*"
-      name="todo"
+      name="todoapp"
       class=".views.TodoView"
       permission="zope2.View"
       />
