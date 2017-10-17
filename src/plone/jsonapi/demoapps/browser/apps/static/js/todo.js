@@ -90,6 +90,12 @@
         return response.items;
       };
 
+      Todos.prototype.remaining = function() {
+        return this.where({
+          review_state: "published"
+        });
+      };
+
       return Todos;
 
     })(Backbone.Collection);
@@ -186,6 +192,8 @@
 
       App.prototype.todo_folder = "/Plone/todos";
 
+      App.prototype.statsTemplate = _.template($('#stats-template').html());
+
       App.prototype.events = {
         "keypress #new-todo": "createOnEnter"
       };
@@ -199,7 +207,9 @@
         this.todo_list = $("#todo-list");
         this.todos.on('add', this.addOne, this);
         this.todos.on('reset', this.addAll, this);
-        return this.new_todo = $("#new-todo");
+        this.todos.on('all', this.render, this);
+        this.new_todo = this.$("#new-todo");
+        return this.footer = this.$('footer');
       };
 
       App.prototype.addOne = function(todo) {
@@ -237,6 +247,15 @@
         });
         this.todos.add(todo);
         return this.new_todo.val("");
+      };
+
+      App.prototype.render = function() {
+        var remaining;
+        remaining = this.todos.remaining().length;
+        this.footer.html(this.statsTemplate({
+          remaining: remaining
+        }));
+        return this;
       };
 
       return App;

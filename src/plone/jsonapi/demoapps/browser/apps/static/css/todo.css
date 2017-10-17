@@ -132,7 +132,7 @@
 }
 
 #todoapp footer {
-	display: none;
+	/* display: none; */
 	margin: 0 -20px -20px -20px;
 	overflow: hidden;
 	color: #555555;

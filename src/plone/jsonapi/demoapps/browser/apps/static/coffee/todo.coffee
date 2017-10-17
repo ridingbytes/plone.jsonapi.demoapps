@@ -57,6 +57,9 @@ require [
     parse: (response, options) ->
       return response.items
 
+    remaining: ->
+      return @where review_state: "published"
+
 
   ### VIEWS ###
   class TodoView extends Backbone.View
@@ -117,6 +120,8 @@ require [
 
     todo_folder: "/Plone/todos"
 
+    statsTemplate: _.template $('#stats-template').html()
+
     events:
       "keypress #new-todo": "createOnEnter"
 
@@ -130,8 +135,10 @@ require [
 
       @todos.on 'add', @addOne, @
       @todos.on 'reset', @addAll, @
+      @todos.on 'all', @render, @
 
-      @new_todo = $("#new-todo")
+      @new_todo = @$("#new-todo")
+      @footer = @$('footer');
 
     addOne: (todo) ->
       view = new TodoView model:todo
@@ -155,6 +162,11 @@ require [
         # add the todo to the collection
       @todos.add todo
       @new_todo.val ""
+
+    render: ->
+      remaining = @todos.remaining().length
+      @footer.html @statsTemplate remaining: remaining
+      return @
 
   # window.todos = new Todos()
   window.app = new App()
