@@ -46,6 +46,7 @@ require [
       ,
         success: (model, response, options) ->
           return unless response.count is 1
+          model.unset "transition", silent: yes
           model.set response.items[0]
 
 

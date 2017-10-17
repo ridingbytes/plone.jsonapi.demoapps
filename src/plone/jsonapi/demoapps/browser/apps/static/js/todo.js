@@ -65,6 +65,9 @@
             if (response.count !== 1) {
               return;
             }
+            model.unset("transition", {
+              silent: true
+            });
             return model.set(response.items[0]);
           }
         });
