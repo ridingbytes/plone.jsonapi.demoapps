@@ -17,19 +17,20 @@
     </metal:block>
       <h1 class="documentFirstHeading">Todos</h1>
     <metal:content fill-slot="content-core">
+
       <div id="todoapp">
         <header>
           <input id="new-todo" type="text" class="form-control" placeholder="What needs to be done?">
         </header>
         <section id="main">
-          <!-- <input id="toggle-all" type="checkbox"> -->
-          <!-- <label for="toggle-all">Mark all as complete</label> -->
           <ul id="todo-list"></ul>
         </section>
         <footer></footer>
       </div>
 
       <!-- Templates -->
+
+      <!-- Single Todo-Item -->
       <script type="text/template" id="todo-item">
         <div class="view">
           <label class="state-<%- review_state %>"><%- title %></label>
@@ -57,6 +58,7 @@
         <textarea class="description"><%- description %></textarea>
       </script>
 
+      <!-- Stats template -->
       <script type="text/template" id="stats-template">
        <div class="todo-count"><b><%= remaining %></b> <%= remaining == 1 ? 'item' : 'items' %> left</div>
       </script>

@@ -14,6 +14,8 @@ require [
 
   ### MODELS ###
 
+  # Fake PUT, PATCH and DELETE requests with a HTTP POST, setting the
+  # X-HTTP-Method-Override header
   Backbone.emulateHTTP = yes
 
   class Todo extends Backbone.Model
@@ -31,11 +33,6 @@ require [
     isNew: ->
       _.isEmpty @get "uid"
 
-    parse: (response, options) ->
-      if response.items?.length is 1
-        return response.items[0]
-      return response
-
     isDone: ->
       if @get("review_state") is "private" then yes else no
 
@@ -45,9 +42,8 @@ require [
         transition: transition
       ,
         success: (model, response, options) ->
-          return unless response.count is 1
           model.unset "transition", silent: yes
-          model.set response.items[0]
+          model.set response
 
 
   ### COLLECTIONS ###
@@ -94,7 +90,7 @@ require [
       if (!title)
         @clear()
       else
-        @model.save({title: title, description: description})
+        @model.save title: title, description: description
         @$el.removeClass("editing")
 
     updateOnEnter: (event) ->
@@ -158,9 +154,9 @@ require [
         transition: "publish"
       ,
         success: (model, response, options) ->
-          return unless response.items.length is 1
-          model.set response.items[0]
-        # add the todo to the collection
+          model.set _.first response.items
+
+      # add the todo to the collection
       @todos.add todo
       @new_todo.val ""
 

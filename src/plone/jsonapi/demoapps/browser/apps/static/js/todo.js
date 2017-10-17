@@ -39,14 +39,6 @@
         return _.isEmpty(this.get("uid"));
       };
 
-      Todo.prototype.parse = function(response, options) {
-        var ref;
-        if (((ref = response.items) != null ? ref.length : void 0) === 1) {
-          return response.items[0];
-        }
-        return response;
-      };
-
       Todo.prototype.isDone = function() {
         if (this.get("review_state") === "private") {
           return true;
@@ -62,13 +54,10 @@
           transition: transition
         }, {
           success: function(model, response, options) {
-            if (response.count !== 1) {
-              return;
-            }
             model.unset("transition", {
               silent: true
             });
-            return model.set(response.items[0]);
+            return model.set(response);
           }
         });
       };
@@ -242,10 +231,7 @@
           transition: "publish"
         }, {
           success: function(model, response, options) {
-            if (response.items.length !== 1) {
-              return;
-            }
-            return model.set(response.items[0]);
+            return model.set(_.first(response.items));
           }
         });
         this.todos.add(todo);
