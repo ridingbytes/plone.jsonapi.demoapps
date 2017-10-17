@@ -42,8 +42,8 @@ require [
         transition: transition
       ,
         success: (model, response, options) ->
+          model.set _.first response.items
           model.unset "transition", silent: yes
-          model.set response
 
 
   ### COLLECTIONS ###
@@ -155,6 +155,7 @@ require [
       ,
         success: (model, response, options) ->
           model.set _.first response.items
+          model.unset "transition", silent: yes
 
       # add the todo to the collection
       @todos.add todo

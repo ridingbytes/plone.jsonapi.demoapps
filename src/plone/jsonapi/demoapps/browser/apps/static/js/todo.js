@@ -54,10 +54,10 @@
           transition: transition
         }, {
           success: function(model, response, options) {
-            model.unset("transition", {
+            model.set(_.first(response.items));
+            return model.unset("transition", {
               silent: true
             });
-            return model.set(response);
           }
         });
       };
@@ -231,7 +231,10 @@
           transition: "publish"
         }, {
           success: function(model, response, options) {
-            return model.set(_.first(response.items));
+            model.set(_.first(response.items));
+            return model.unset("transition", {
+              silent: true
+            });
           }
         });
         this.todos.add(todo);
